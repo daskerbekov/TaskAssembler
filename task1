@@ -1,0 +1,54 @@
+.586P
+.model flat, stdcall
+option  casemap : none
+include     \masm32\include\windows.inc
+include     \masm32\include\kernel32.inc
+includelib  \masm32\lib\kernel32.lib
+include     \masm32\include\user32.inc
+includelib  \masm32\lib\user32.lib
+.data
+    HINST       dd  0
+    a1      dd  5555
+    b1      dd  6666
+    c1      dd  7777
+    y       dd  0
+    STR0        DB  100 dup(0)
+    FORM        DB  "y= EDX: %lu EAX: %lu",0
+    CAP1        db  '?????????',0
+.code
+START:
+    PUSH    0
+    CALL    GetModuleHandleA
+    MOV     HINST,  EAX
+    XOR     EDX,EDX
+    MOV     EAX, a1
+    MOV     EBX, b1
+    MOV     ECX, c1
+    MUL     EBX
+    MOV     ESI,EAX
+    MOV     EDI,EDX
+    XOR     EDX,EDX
+    MUL     ECX
+    PUSH    EAX
+    PUSH    EDX
+    XOR     EDX,EDX
+    MOV     EAX,EDI
+    MUL     ECX
+    JC      _overflow
+    POP     EDX
+    ADD     EDX,EAX
+    POP     EAX         ]
+    PUSH    EAX
+    PUSH    EDX
+    PUSH    offset FORM
+    PUSH    offset STR0
+    CALL    wsprintfA
+    PUSH    0
+    PUSH    offset CAP1
+    PUSH    offset STR0
+    PUSH    0
+    CALL    MessageBoxA
+_overflow:
+    PUSH    0
+    CALL    ExitProcess
+end START                     
