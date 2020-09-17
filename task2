@@ -1,0 +1,56 @@
+ ;Вычисления по условию целых чисел со знаком
+;Необходимые инструкции для компиляции программы под MASM32
+.586P                       ;тип процессора пентиум
+.model flat, stdcall        ;модель памяти плоская, страндартный порядок передачи аргументов при вызове функций
+option  casemap : none      ;регистр букв не учитывать
+;добавляемые библиотеки для компиляции виндоуз версии
+include     \masm32\include\windows.inc
+include     \masm32\include\kernel32.inc
+includelib  \masm32\lib\kernel32.lib
+include     \masm32\include\user32.inc
+includelib  \masm32\lib\user32.lib
+.data       ;сегмент данных
+    HINST       dd  0   ;дескриптор приложения (для нашей задачи не нужен ))
+    a1      dd  5555    ;значение первой переменной равно 5555
+    b1      dd  6666    ;значение второй переменной равно 6666
+    c1      dd  7777    ;значение третей переменной равно 7777
+;для wsprintfA - функция форматирования чисел в их текстовое представление
+    STR0        DB  100 dup(0)
+    FORM        DB  "EAX: %ld остаток EDX: %lX",0
+    CAP1        db  'Результат',0
+.code           ;сегмент кода
+START:          ;точка входа
+;Получить дескриптор приложения (не обязательно)
+    PUSH    0
+    CALL    GetModuleHandleA
+    MOV     HINST,  EAX
+;Начало наших вычислений
+    MOV     EAX, a1     ;Занесём в регистр EAX значение переменной a1
+    MOV     EBX, b1     ;Занесём в регистр EBX значение переменной b1
+    MOV     ECX, c1     ;Занесём в регистр ECX значение переменной c1
+    CMP     EAX,EBX     ;Сравнить a1 и b1    
+    JG      _label1     ;Если a1 > b1 то перейти на метку _label1
+    XOR     EDX,EDX     ;Обнулить EDX
+    ADD     EAX,EBX     ;a1+b1
+    SUB     EAX,ECX     ;[a1+b1]-c1
+    JMP     _out1       ;Перейти на метку _out1
+_label1:
+;a1/b1
+    XOR     EDX,EDX     ;Обнулить EDX
+    DIV     EBX         ;Разделить a1 на b1
+_out1:
+;Этот код предназначен для вывода значений регистров EDX:EAX в мессаджбокс в десятичных значениях (EDX в шестнадцатиричном)
+    PUSH    EDX
+    PUSH    EAX
+    PUSH    offset FORM
+    PUSH    offset STR0
+    CALL    wsprintfA
+ 
+    PUSH    0
+    PUSH    offset CAP1
+    PUSH    offset STR0
+    PUSH    0
+    CALL    MessageBoxA
+_exit:
+    CALL    ExitProcess
+end START                               
